@@ -1,0 +1,7 @@
+A Manuscript on Deciphering Cryptographic Messages by Al-Kindi
+The Codebreakers David Kahn
+Applied Cryptography by Bruce Schneier
+Handbook of Applied Cryptography by A. Menezes, P. van Oorschot, S. Vanstone
+Practical Cryptography by N. Ferguson, B. Schneier
+Introduction to Modern Cryptography by J. Katz, Y. Lindell
+Understanding Cryptography (2nd Ed.) by C. Paar, J. Pelzl, T. Güneysu

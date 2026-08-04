@@ -1,0 +1,39 @@
+# 05 — Benchmark Methodology and Formal Evaluation, With Rigor
+
+*Part of a multi-file report — see `00-INDEX-executive-summary.md` for the map. Assumes `01`–`04`. Companion ARX report `07` (benchmarking) and `05` (MILP/SAT, formal security evaluation) are assumed in full — this file applies statistical rigor to the former and clarifies the proof/evidence relationship for the latter.*
+
+---
+
+## 1. Benchmark Methodology, With the Rigor Layer Applied
+
+### 1.1 Why a cycle count is a sampled measurement, not an exact one
+
+Companion ARX report `07` §3 already lists disclosure requirements (platform, compiler, optimization level, variance) as expected practice — this file supplies the statistical reasoning behind *why* variance disclosure specifically matters, connecting it directly to `03`'s general framework. A single cycles-per-byte measurement is subject to real, structured noise: OS scheduling interruptions, thermal throttling, turbo-boost frequency variation, cache state inherited from whatever ran immediately before the measurement, and, on any shared or virtualized platform, contention from co-resident processes entirely outside the benchmark's control. **A single-run cycle count is, statistically, exactly analogous to a single-trial SAC measurement** (`03` §2) — it's one draw from a noisy distribution, not the "true" throughput figure, and treating it as the latter is the identical category error `03` catalogs for diffusion testing, just in a different domain.
+
+### 1.2 What proper benchmark statistical reporting looks like
+
+Directly applying `03`'s machinery: run many repeated trials (companion ARX report `07` §3.4 already recommends this; this file specifies what to do with the repeated data) and report either a **mean with a confidence interval** or, often more robust to the specific noise sources listed in §1.1 (which tend to produce occasional large outliers — a scheduler interruption mid-measurement — rather than symmetric noise), a **median with an interquartile range**. **The comparison-specific consequence, directly relevant to any "design A is faster than design B" claim** (companion design-process report `03` §2's comparably-optimized-baseline discipline, extended here with the statistical half of that discipline): a difference in reported mean cycles-per-byte between two designs is only a meaningful claim if it exceeds what the two designs' respective measurement variances would produce by chance — a formal two-sample comparison (a t-test or, given the outlier-prone noise structure just described, a non-parametric rank-based test) is the statistically correct tool, and a bare "A: 3.2 cpb, B: 3.4 cpb, therefore A is faster" claim, without any variance information attached to either figure, is exactly the kind of claim `03` §3's significance-versus-noise distinction exists to catch.
+
+### 1.3 Cross-platform and cross-microarchitecture variance as a distinct, additional source of uncertainty
+
+Beyond §1.1's within-platform measurement noise, companion ARX report `07` §2.3's finding that relative rankings can shift across microarchitecture generations and vendor implementations introduces a **second, structurally different kind of variance** — not sampling noise around a single true value, but genuine variation *in the true value itself* across the population of real-world deployment targets. **The rigor-layer point this file adds**: a benchmark reported from a single platform should be explicitly scoped as such ("cycles-per-byte on this specific microarchitecture"), not generalized into an unqualified "this design is faster" claim — the two kinds of variance (within-platform noise, across-platform true variation) call for different handling: more repeated trials shrinks the first; only testing across a genuinely representative platform sample addresses the second, and no amount of additional repetition on one platform substitutes for it.
+
+### 1.4 Energy and memory-footprint measurement
+
+Companion ARX report `07` §3.2. The same repeated-trial, variance-reporting discipline applies identically to energy measurement specifically (direct hardware power monitoring is, if anything, noisier than cycle counting, subject to additional sources like ambient temperature and power-supply variation) — worth flagging explicitly since energy figures are frequently reported as single numbers in lightweight-cryptography comparison tables (companion ARX report `07` §3.2's NIST LWC competition-evaluation reference) without the variance disclosure this section argues is equally necessary here as for raw cycle counts.
+
+## 2. Formal Evaluation, Clarified Through the Epistemic Hierarchy
+
+### 2.1 Where a proof sits in `01`'s five-level hierarchy, restated precisely
+
+Companion ARX report `05` §3 covers game-based security, the ideal permutation model, and concrete security in full technical depth. This file's contribution is purely the epistemic placement: a security reduction is `01` §3's **proof** tier — the strongest evidence this entire report catalogs — but it is proof of a *conditional* statement (if the stated hard-problem assumption holds, and if the idealized model, such as the random oracle or ideal permutation model, is a good enough approximation of the real, deployed primitive, then the construction achieves the stated security notion), and every one of those conditions is itself subject to the same measurement/evidence/confidence framework this report develops for everything else. A reduction does not exit the hierarchy into some higher tier called "actually secure" — it moves the open question from "is this construction secure" to "does this hardness assumption hold, and is this idealized model adequate," which are themselves ongoing, evidence-accumulating, confidence-calibrated questions, not settled ones.
+
+### 2.2 Concrete security as the bridge between proof and the rest of this report's statistical machinery
+
+Companion ARX report `05` §3.4's concrete-security discussion is the specific place formal proof and this file's statistical/benchmark rigor actually connect: a concrete-security bound expresses an adversary's advantage as an explicit function of query count, round count, and the trail probabilities found in `03`–`04`'s cryptanalytic search stages — meaning a rigorous concrete-security statement is only as strong as the trail-search evidence feeding into it, and `03` §9's point about Markov-assumption modeling uncertainty applies directly here: a concrete-security bound inherits whatever uncertainty exists in the trail-probability estimates it's built from, and stating the bound to more decimal places of precision than that underlying uncertainty supports is its own, subtler form of false precision.
+
+### 2.3 Formal verification and proof assistants, placed in the hierarchy
+
+Companion design-process report `07` §5's table already notes proof assistants (Coq, Lean, Isabelle) can *check* a constructed proof but don't, on their own, construct the proof's argument. The epistemic point worth adding: a machine-checked proof is not epistemically stronger than a correctly hand-verified one in terms of what it proves — it's stronger in terms of *ruling out a specific class of human error* (a mistake in a hand-verification step) that a hand-checked proof remains vulnerable to. This is genuinely valuable, but it's a narrower claim than "formal verification makes a result more true" — it makes a specific, real category of mistake in the *verification process* less likely, which is a `01` §1-style structural-blind-spot correction, not an upgrade in what kind of claim the proof itself is making.
+
+Part `06` (`06-reproducibility-evaluation-failures-and-modern-frameworks.md`) now covers reproducibility as a formal discipline, a catalog of evaluation failures, and how NIST/CAESAR/PQC/SHA-3 actually select finalists.
